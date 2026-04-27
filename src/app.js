@@ -1,5 +1,10 @@
 import 'dotenv/config';
 import express from 'express';
+
+console.log('[ENV CHECK]', {
+  DB_HOST: process.env.DB_HOST,
+  NODE_ENV: process.env.NODE_ENV,
+});
 import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
