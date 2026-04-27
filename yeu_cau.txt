@@ -1,0 +1,137 @@
+1.1.	Lý do chọn đồ án
+Trong bối cảnh chuyển đổi số diễn ra mạnh mẽ, thương mại điện tử không còn chỉ là kênh mua bán trực tuyến mà đã phát triển thành môi trường kinh doanh thông minh, nơi dữ liệu người dùng được khai thác để nâng cao trải nghiệm và tối ưu hiệu quả vận hành. Song song với xu hướng đó, Trí tuệ nhân tạo (Artificial Intelligence – AI) đang trở thành công nghệ cốt lõi giúp các hệ thống thương mại điện tử cá nhân hóa nội dung, dự đoán nhu cầu và hỗ trợ ra quyết định dựa trên dữ liệu thay vì cảm tính.
+Ngành hàng dành cho thú cưng là một trong những lĩnh vực đang phát triển nhanh tại Việt Nam. Sự gia tăng số lượng hộ gia đình nuôi chó, mèo kéo theo nhu cầu lớn về các sản phẩm như thức ăn, phụ kiện, đồ dùng chăm sóc và đồ chơi. Đặc điểm nổi bật của lĩnh vực này là hành vi mua sắm mang tính lặp lại theo chu kỳ (ví dụ: thức ăn, cát vệ sinh), đồng thời phụ thuộc vào nhiều yếu tố như loại thú cưng, độ tuổi, thể trạng và điều kiện sống. Tuy nhiên, phần lớn các website bán hàng hiện nay vẫn hiển thị sản phẩm theo cách giống nhau cho mọi người dùng, chưa tận dụng hiệu quả dữ liệu hành vi để cá nhân hóa trải nghiệm mua sắm.
+Bên cạnh đó, các cửa hàng kinh doanh phụ kiện thú cưng thường gặp khó khăn trong việc phân tích nhu cầu khách hàng, xác định nhóm sản phẩm tiềm năng, cũng như dự đoán thời điểm khách hàng cần mua lại sản phẩm tiêu hao. Việc thiếu công cụ phân tích dữ liệu khiến hoạt động marketing, quản lý tồn kho và chăm sóc khách hàng chưa đạt hiệu quả tối ưu.
+Xuất phát từ những thực tế trên, em quyết định lựa chọn đề tài: “Xây dựng website bán phụ kiện thú cưng ứng dụng AI cá nhân hóa”.
+Đề tài hướng đến việc xây dựng một hệ thống thương mại điện tử không chỉ đáp ứng chức năng mua bán trực tuyến, mà còn tích hợp các kỹ thuật AI nhằm phân tích hành vi người dùng, gợi ý sản phẩm phù hợp và dự đoán nhu cầu mua sắm trong tương lai. Thông qua đó, hệ thống góp phần nâng cao trải nghiệm người dùng, đồng thời hỗ trợ nhà bán hàng đưa ra quyết định kinh doanh dựa trên dữ liệu.
+Việc thực hiện đề tài giúp em vận dụng kiến thức đã học về lập trình web, cơ sở dữ liệu và học máy vào một bài toán thực tế. Đây cũng là cơ hội để rèn luyện tư duy phân tích hệ thống, thiết kế kiến trúc phần mềm có tích hợp AI và xử lý dữ liệu người dùng trong môi trường thương mại điện tử hiện đại.
+1.2.2.	Mục tiêu cụ thể
+Thiết kế và xây dựng website bán phụ kiện thú cưng với giao diện thân thiện, dễ sử dụng trên nhiều thiết bị.
+	Phát triển đầy đủ các chức năng cơ bản của một hệ thống thương mại điện tử
+	Quản lý tài khoản người dùng (đăng ký, đăng nhập, cập nhật thông tin).
+	Hiển thị danh mục và chi tiết sản phẩm.
+	Tìm kiếm, lọc và sắp xếp sản phẩm.
+	Giỏ hàng, đặt hàng và theo dõi trạng thái đơn hàng.
+Thu thập và lưu trữ dữ liệu hành vi người dùng như lượt xem sản phẩm, lịch sử mua hàng và tần suất mua. Xây dựng hệ thống gợi ý sản phẩm dựa trên hành vi và đặc điểm người dùng.
+Phân cụm khách hàng theo thói quen mua sắm nhằm hỗ trợ cá nhân hóa nội dung hiển thị. Xây dựng mô hình dự đoán thời điểm người dùng có khả năng mua lại các sản phẩm tiêu hao cho thú cưng. Phân tích mối quan hệ giữa các sản phẩm thường được mua cùng nhau để gợi ý mua kèm.
+Đảm bảo hệ thống hoạt động ổn định, dữ liệu được lưu trữ và xử lý chính xác, có khả năng mở rộng trong tương lai.
+1.3.2.	Phạm vi nghiên cứu
+Đề tài tập trung xây dựng một website bán phụ kiện thú cưng cho người dùng cuối, với các chức năng thương mại điện tử cơ bản kết hợp các mô-đun AI ở mức ứng dụng.
+Trong phạm vi đồ àn tốt nghiệp, đề tài giới hạn ở các nội dung sau:
+	Xây dựng hệ thống bán hàng trực tuyến với dữ liệu sản phẩm và người dùng ở quy mô mô phỏng.
+	Thu thập và xử lý dữ liệu hành vi người dùng trong phạm vi hệ thống thử nghiệm.
+	Triển khai các mô hình AI ở mức cơ bản đến trung bình như:
+o	Hệ gợi ý sản phẩm (Recommendation System).
+o	Phân cụm khách hàng (Clustering).
+o	Dự đoán thời điểm mua lại sản phẩm (Regression).
+o	Phân tích luật kết hợp sản phẩm (Association Rules).
+	Không đi sâu vào các vấn đề nâng cao như xử lý dữ liệu lớn (Big Data), triển khai hệ thống ở quy mô doanh nghiệp thực tế hoặc tích hợp các hệ thống thanh toán phức tạp ngoài phạm vi nghiên cứu.
+1.4.	Nội dung thực hiện
+Các nội dung chính được triển khai trong đồ án bao gồm:
+1.	Khảo sát nghiệp vụ và phâm tích yêu cầu hệ thống
+Tìm hiểu quy trình kinh doanh phụ kiện thú cưng thực tế, bao gồm các nhóm sản phẩm (thức ăn, đồ chơi, phụ kiện chăm sóc, phụ kiện thời trang cho thú cưng…), hành vi mua sắm của khách hàng và nhu cầu quản lý của người bán. Từ đó xác định yêu cầu chức năng (quản lý sản phẩm, đơn hàng, thanh toán, gợi ý sản phẩm…) và yêu cầu phi chức năng (hiệu năng, bảo mật, khả năng mở rộng).
+2.	Thiết kế kiến trúc hệ thống và cơ sở dữ liệu
+Xây dựng kiến trúc tổng thể gồm: Frontend (giao diện người dùng), Backend (xử lý nghiệp vụ), Database (lưu trữ dữ liệu) và AI Service (mô-đun trí tuệ nhân tạo). Thiết kế cơ sở dữ liệu bao gồm các bảng về người dùng, sản phẩm, danh mục, hành vi người dùng, lịch sử đơn hàng và dữ liệu phục vụ huấn luyện mô hình AI.
+3.	Xây dựng website thương mại điện tử
+Phát triển các chức năng chính như: đăng ký/đăng nhập, tìm kiếm và lọc sản phẩm, giỏ hàng, đặt hàng, thanh toán trực tuyến, quản lý đơn hàng, quản lý sản phẩm cho quản trị viên. Giao diện được thiết kế thân thiện, tối ưu cho trải nghiệm mua sắm trên cả máy tính và thiết bị di động.
+4.	Xây dựng hệ thống thu thập dữ liệu và hành vi người dùng
+Triển khai cơ chế ghi nhận các hành vi như: lượt xem sản phẩm, lượt tìm kiếm, thời gian xem, thêm vào giỏ hàng, mua hàng. Dữ liệu này được lưu trữ và làm sạch để phục vụ cho các mô hình AI phân tích và cá nhân hóa.
+5.	Tiền xử lý dữ liệu và xây dụng tập dữ liệu huấn luyện
+Chuẩn hóa dữ liệu người dùng và dữ liệu sản phẩm, xử lý dữ liệu thiếu, mã hóa thuộc tính phân loại và xây dựng các đặc trưng (features) như tần suất mua hàng, nhóm sản phẩm quan tâm, mức giá ưa thích.
+6.	Xây dựng mô hình AI cá nhân hóa
+Triển khai các mô hình gợi ý sản phẩm dựa trên hành vi người dùng (Collaborative Filtering), phân cụm khách hàng (Clustering) và khai phá luật kết hợp (Association Rule Mining) để phát hiện các sản phẩm thường được mua cùng nhau.
+7.	Huấn luyện, đánh giá vầ tối ưu mô hình
+Chia dữ liệu thành tập huấn luyện và kiểm thử, đánh giá mô hình bằng các chỉ số như Precision, Recall, F1-score hoặc RMSE (tùy bài toán). Tối ưu tham số nhằm cải thiện chất lượng gợi ý.
+8.	Tích hợp module AI vào website
+Xây dựng API trung gian để website gửi yêu cầu và nhận kết quả gợi ý sản phẩm theo từng người dùng. Hệ thống AI hoạt động như một dịch vụ độc lập nhưng liên kết chặt chẽ với hệ thống bán hàng.
+9.	Kiểm thử hệ thống tổng thể
+Thực hiện kiểm thử chức năng, kiểm thử tích hợp giữa website và AI, kiểm thử hiệu năng khi có nhiều người dùng truy cập đồng thời.
+10.	Đánh giá kết quả và hoàn thiện báo cáo
+So sánh hiệu quả giữa hệ thống có và không có AI cá nhân hóa, phân tích lợi ích mang lại cho trải nghiệm người dùng và hoạt động kinh doanh. Tổng hợp kết quả, viết báo cáo và hoàn thiện đồ án.
+
+
+3.1.	Đặc tả yêu cầu phần mềm
+3.1.1.	Mô tả tổng quan hệ thống
+Hệ thống website bán phụ kiện thú cưng được xây dựng nhằm cung cấp một nền tảng thương mại điện tử cho người dùng có nhu cầu mua sắm các sản phẩm dành cho thú cưng như thức ăn, đồ chơi, phụ kiện, vật dụng chăm sóc. Bên cạnh các chức năng thương mại điện tử cơ bản, hệ thống tích hợp công nghệ AI nhằm phân tích hành vi người dùng và đưa ra các gợi ý sản phẩm mang tính cá nhân hóa.
+Hệ thống gồm hai phân hệ chính:
+	Phân hệ người dùng: cho phép người dùng tìm kiếm, xem, mua sản phẩm và nhận gợi ý sản phẩm phù hợp.
+	Phân hệ quản trị: cho phép quản trị viên quản lý sản phẩm, đơn hàng, người dùng và theo dõi dữ liệu hành vi phục vụ phân tích.
+3.1.2.	Các đối tượng sử dụng hệ thống
+Hệ thống phục vụ các nhóm đối tượng sau:
+	Khách vãng lai: người dùng chưa đăng nhập, có thể xem danh sách và chi tiết sản phẩm.
+	Người dùng đã đăng ký: có thể đăng nhập, mua hàng, xem lịch sử đơn hàng và nhận gợi ý sản phẩm cá nhân hóa.
+	Quản trị viên: quản lý toàn bộ dữ liệu hệ thống và cấu hình các chức năng liên quan.
+3.1.3.	Yêu cầu chức năng
+a.	Chức năng dành cho người dùng
+	Đăng ký và đăng nhập tài khoản.
+	Xem danh sách sản phẩm theo danh mục.
+	Tìm kiếm và lọc sản phẩm theo tên, giá, loại thú cưng.
+	Xem chi tiết sản phẩm.
+	Thêm sản phẩm vào giỏ hàng.
+	Đặt hàng và thanh toán.
+	Xem lịch sử mua hàng.
+	Nhận gợi ý sản phẩm dựa trên hành vi duyệt và mua hàng.
+
+b.	Chức năng dành cho quản trị viên
+	Quản lý danh mục sản phẩm.
+	Quản lý thông tin sản phẩm (thêm, sửa, xóa).
+	Quản lý người dùng.
+	Quản lý đơn hàng và trạng thái đơn hàng.
+	Thống kê, báo cáo dữ liệu bán hàng.
+	Theo dõi dữ liệu hành vi người dùng phục vụ hệ thống gợi ý.
+3.1.4.	Yêu cầu phi chức năng
+	Hiệu năng: hệ thống đáp ứng các thao tác cơ bản trong thời gian ngắn, không gây gián đoạn trải nghiệm người dùng.
+	Bảo mật: thông tin tài khoản và dữ liệu người dùng được bảo vệ, chỉ cho phép truy cập theo phân quyền.
+	Khả năng mở rộng: hệ thống có khả năng mở rộng khi số lượng người dùng và sản phẩm tăng.
+	Tính ổn định: hệ thống hoạt động ổn định trong thời gian dài.
+	Khả năng sử dụng: giao diện thân thiện, dễ sử dụng với nhiều đối tượng người dùng.
+3.1.5.	Yêu cầu dữ liệu
+	Dữ liệu người dùng: thông tin cá nhân, lịch sử truy cập, lịch sử mua hàng.
+	Dữ liệu sản phẩm: tên, giá, mô tả, hình ảnh, danh mục.
+	Dữ liệu đơn hàng: thông tin đơn hàng, trạng thái, thời gian đặt hàng.
+	Dữ liệu hành vi người dùng: lượt xem sản phẩm, tìm kiếm, thao tác mua hàng.
+3.1.6.	Yêu cầu về hệ thống gợi ý sản phẩm
+	Thu thập và lưu trữ dữ liệu hành vi người dùng.
+	Phân tích dữ liệu để xác định sở thích và xu hướng mua sắm.
+	Đưa ra danh sách sản phẩm gợi ý phù hợp cho từng người dùng.
+	Cho phép cập nhật và cải thiện kết quả gợi ý theo thời gian.
+3.1.7.	Giới hạn và giả định của hệ thống
+	Hệ thống chỉ triển khai dưới dạng website.
+	Phương thức thanh toán được giới hạn trong các hình thức phổ biến.
+	Mô hình AI ở mức cơ bản, phù hợp phạm vi đồ án tốt nghiệp.
+	Dữ liệu huấn luyện ban đầu được thu thập trong quá trình sử dụng hệ thống.
+3.2.	Thiết kế hệ thống
+3.2.1.	Thiết kế kiến trúc
+Hệ thống website bán phụ kiện thú cưng được thiết kế theo kiến trúc nhiều tầng (Multi-tier Architecture) nhằm đảm bảo khả năng mở rộng, dễ bảo trì và tách biệt rõ ràng giữa các thành phần chức năng.
+a.	Tấng giao diện người dùng
+Đây là tầng tương tác trực tiếp với người dùng thông qua trình duyệt web. Tầng này chịu trách nhiệm hiển thị thông tin, nhận dữ liệu từ người dùng và gửi yêu cầu tới tầng xử lý nghiệp vụ. Các chức năng chính bao gồm:
+	Hiển thị danh sách sản phẩm
+	Tìm kiếm và lọc sản phẩm
+	Quản lý giỏ hàng
+	Đặt hàng và thanh toán
+	Hiển thị gợi ý sản phẩm cá nhân hóa
+Giao diện được thiết kế theo hướng thân thiện với người dùng và hỗ trợ truy cập trên nhiều thiết bị.
+b.	Tầng xử lý nghiệp vụ
+Tầng này chịu trách nhiệm xử lý các logic nghiệp vụ của hệ thống, bao gồm:
+	Quản lý thông tin sản phẩm
+	Xử lý giỏ hàng và đơn hàng
+	Quản lý người dùng
+	Xử lý thanh toán
+	Thu thập và xử lý dữ liệu hành vi người dùng
+	Gửi yêu cầu đến hệ thống AI để lấy danh sách sản phẩm gợi ý
+Các chức năng này được triển khai thông qua Web API, cho phép frontend và backend giao tiếp với nhau một cách linh hoạt.
+c.	Tầng dữ liệu
+Tầng dữ liệu chịu trách nhiệm lưu trữ và quản lý toàn bộ dữ liệu của hệ thống. Các dữ liệu chính bao gồm:
+	Dữ liệu người dùng
+	Dữ liệu sản phẩm
+	Dữ liệu danh mục
+	Dữ liệu đơn hàng
+	Dữ liệu hành vi người dùng
+Hệ quản trị cơ sở dữ liệu quan hệ được sử dụng để đảm bảo tính toàn vẹn và khả năng truy vấn dữ liệu hiệu quả.
+d.	Mô-đun AI cá nhân hóa
+Ngoài ba tầng chính, hệ thống còn tích hợp một mô-đun AI nhằm phân tích dữ liệu hành vi người dùng và đưa ra các gợi ý sản phẩm. Chức năng của mô-đun AI gồm:
+	Thu thập dữ liệu hành vi người dùng
+	Phân tích dữ liệu
+	Xây dựng mô hình gợi ý sản phẩm
+	Trả về danh sách sản phẩm phù hợp cho từng người dùng
+Mô-đun AI hoạt động như một dịch vụ độc lập và giao tiếp với hệ thống thông qua API.
