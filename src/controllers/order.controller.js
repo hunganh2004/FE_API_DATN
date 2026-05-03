@@ -1,6 +1,7 @@
 import sequelize from '../config/database.js';
-import { Order, OrderItem, OrderStatusLog, Payment, CartItem, Product, ProductVariant, Coupon, Notification } from '../models/index.js';
+import { Order, OrderItem, OrderStatusLog, Payment, CartItem, Product, ProductVariant, Coupon, Notification, User } from '../models/index.js';
 import { success, created, paginated, error } from '../utils/response.js';
+import { sendOrderConfirm } from '../utils/mailer.js';
 
 export const getMyOrders = async (req, res, next) => {
   try {
@@ -117,6 +118,10 @@ export const createOrder = async (req, res, next) => {
     }, { transaction: t });
 
     await t.commit();
+
+    // Gửi email xác nhận đơn hàng
+    sendOrderConfirm(req.user.email, req.user.full_name, order.pk_order_id, total).catch(() => {});
+
     return created(res, { order_id: order.pk_order_id, total }, 'Đặt hàng thành công');
   } catch (err) {
     await t.rollback();

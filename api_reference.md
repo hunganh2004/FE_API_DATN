@@ -64,6 +64,30 @@ Lấy thông tin user đang đăng nhập.
 
 ---
 
+### POST /auth/forgot-password
+Gửi email đặt lại mật khẩu. Luôn trả 200 dù email có tồn tại hay không.
+
+**Request Body**
+```json
+{ "email": "user@example.com" }
+```
+**Response 200** `{ "message": "Nếu email tồn tại, bạn sẽ nhận được hướng dẫn đặt lại mật khẩu" }`
+
+---
+
+### POST /auth/reset-password
+Đặt lại mật khẩu bằng token nhận qua email. Token có hiệu lực 15 phút.
+
+**Request Body**
+```json
+{ "token": "<reset_token>", "new_password": "newpass123" }
+```
+**Response 200** `{ "message": "Đặt lại mật khẩu thành công" }`
+
+**Response 400** nếu token không hợp lệ hoặc hết hạn.
+
+---
+
 ### GET /products
 Danh sách sản phẩm, hỗ trợ lọc và phân trang.
 

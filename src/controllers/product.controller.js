@@ -1,4 +1,5 @@
 import { Op } from 'sequelize';
+import sequelize from '../config/database.js';
 import { Product, ProductVariant, ProductImage, ProductSpec, Category, PetType, Review, User } from '../models/index.js';
 import { success, created, paginated, error } from '../utils/response.js';
 import { createSlug } from '../utils/slugify.js';
@@ -10,11 +11,25 @@ export const getAll = async (req, res, next) => {
 
     const where = { is_active: 1 };
     if (q) where.name = { [Op.like]: `%${q}%` };
-    if (category_id) where.fk_category_id = category_id;
+
+    // Nếu lọc theo category, tự động include cả danh mục con
+    if (category_id) {
+      const children = await Category.findAll({
+        where: { fk_parent_id: category_id, is_active: 1 },
+        attributes: ['pk_category_id'],
+      });
+      const childIds = children.map(c => c.pk_category_id);
+      const allIds = [parseInt(category_id), ...childIds];
+      where.fk_category_id = { [Op.in]: allIds };
+    }
+
     if (price_min || price_max) {
-      where.price = {};
-      if (price_min) where.price[Op.gte] = price_min;
-      if (price_max) where.price[Op.lte] = price_max;
+      const priceExpr = sequelize.literal('COALESCE(`Product`.`sale_price`, `Product`.`price`)');
+      const conditions = {};
+      if (price_min) conditions[Op.gte] = price_min;
+      if (price_max) conditions[Op.lte] = price_max;
+      where[Op.and] = where[Op.and] || [];
+      where[Op.and].push(sequelize.where(priceExpr, conditions));
     }
     if (in_stock === 'true') where.stock = { [Op.gt]: 0 };
     else if (in_stock === 'false') where.stock = 0;
@@ -30,12 +45,35 @@ export const getAll = async (req, res, next) => {
     ];
     if (pet_type_id) include.push({ model: PetType, as: 'petTypes', where: { pk_pet_type_id: pet_type_id }, required: true });
 
+    const ALLOWED_SORT = ['created_at', 'price', 'stock', 'name', 'avg_rating'];
+    const sortField = ALLOWED_SORT.includes(sort) ? sort : 'created_at';
+    const sortOrder = order.toUpperCase() === 'ASC' ? 'ASC' : 'DESC';
+
+    // avg_rating cần subquery từ bảng reviews
+    const effectivePriceExpr = sequelize.literal('COALESCE(`Product`.`sale_price`, `Product`.`price`)');
+
+    const orderClause = sortField === 'avg_rating'
+      ? [
+          [sequelize.literal('(SELECT COALESCE(AVG(r.rating), 0) FROM tbl_reviews r WHERE r.fk_product_id = `Product`.`pk_product_id` AND r.fk_parent_id IS NULL)'), sortOrder],
+          ['pk_product_id', 'DESC'],
+        ]
+      : sortField === 'price'
+      ? [
+          [effectivePriceExpr, sortOrder],
+          ['pk_product_id', 'DESC'],
+        ]
+      : [
+          [sortField, sortOrder],
+          ['pk_product_id', 'DESC'],
+        ];
+
     const { count, rows } = await Product.findAndCountAll({
       where, include,
-      order: [[sort, order.toUpperCase()]],
+      order: orderClause,
       limit: parseInt(limit),
       offset: (page - 1) * limit,
       distinct: true,
+      subQuery: false,
     });
 
     return paginated(res, rows, count, page, limit);

@@ -3,6 +3,7 @@ import sequelize from '../config/database.js';
 import { Order, OrderItem, OrderStatusLog, Payment, User, Notification, CustomerSegment, Review, Product, ProductImage } from '../models/index.js';
 import { success, paginated, error } from '../utils/response.js';
 import { fetchAllSegments, trainAll, trainModel, isAIHealthy } from '../utils/aiClient.js';
+import { sendPromotion } from '../utils/mailer.js';
 
 // ── Đơn hàng ─────────────────────────────────────────────────
 
@@ -235,10 +236,14 @@ export const sendNotification = async (req, res, next) => {
 
     // Gửi đến tất cả user nếu không truyền user_id
     if (!user_id) {
-      const users = await User.findAll({ where: { role: 'customer', is_active: 1 }, attributes: ['pk_user_id'] });
+      const users = await User.findAll({ where: { role: 'customer', is_active: 1 }, attributes: ['pk_user_id', 'full_name', 'email'] });
       await Notification.bulkCreate(
         users.map(u => ({ fk_user_id: u.pk_user_id, type, title, message, ref_id: ref_id || null }))
       );
+      // Gửi email nếu là promotion hoặc repurchase_reminder
+      if (['promotion', 'repurchase_reminder'].includes(type)) {
+        users.forEach(u => sendPromotion(u.email, u.full_name, title, message).catch(() => {}));
+      }
       return success(res, null, `Đã gửi thông báo đến ${users.length} người dùng`, 201);
     }
 
@@ -246,6 +251,9 @@ export const sendNotification = async (req, res, next) => {
     if (!user) return error(res, 'Người dùng không tồn tại', 404);
 
     const notif = await Notification.create({ fk_user_id: user_id, type, title, message, ref_id: ref_id || null });
+    if (['promotion', 'repurchase_reminder'].includes(type)) {
+      sendPromotion(user.email, user.full_name, title, message).catch(() => {});
+    }
     return success(res, notif, 'Gửi thông báo thành công', 201);
   } catch (err) { next(err); }
 };

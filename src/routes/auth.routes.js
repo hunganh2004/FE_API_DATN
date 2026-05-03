@@ -37,4 +37,19 @@ router.post('/change-password',
   authController.changePassword
 );
 
+router.post('/forgot-password',
+  [body('email').isEmail().withMessage('Email không hợp lệ')],
+  validate,
+  authController.forgotPassword
+);
+
+router.post('/reset-password',
+  [
+    body('token').notEmpty().withMessage('Token không được để trống'),
+    body('new_password').isLength({ min: 6 }).withMessage('Mật khẩu tối thiểu 6 ký tự'),
+  ],
+  validate,
+  authController.resetPassword
+);
+
 export default router;

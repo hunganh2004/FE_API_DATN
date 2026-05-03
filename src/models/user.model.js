@@ -9,9 +9,9 @@ const User = sequelize.define('User', {
   phone:         { type: DataTypes.STRING(20) },
   avatar_url:    { type: DataTypes.STRING(500) },
   role:          { type: DataTypes.ENUM('customer', 'admin'), defaultValue: 'customer' },
-  is_active:     { type: DataTypes.TINYINT, defaultValue: 1 },
-  created_at:    { type: DataTypes.DATE, defaultValue: DataTypes.NOW },
-  updated_at:    { type: DataTypes.DATE, defaultValue: DataTypes.NOW },
+  is_active:          { type: DataTypes.TINYINT, defaultValue: 1 },
+  created_at:         { type: DataTypes.DATE, defaultValue: DataTypes.NOW },
+  updated_at:         { type: DataTypes.DATE, defaultValue: DataTypes.NOW },
 }, { tableName: 'tbl_users', timestamps: false });
 
 export default User;
