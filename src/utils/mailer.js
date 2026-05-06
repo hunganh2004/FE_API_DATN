@@ -121,3 +121,13 @@ export const sendPromotion = (to, fullName, title, message) =>
     <h2 style="margin:0 0 16px;color:#111827;font-size:20px;">Xin chào ${fullName},</h2>
     <p>${message}</p>
   `));
+
+export const sendOrderCancelled = (to, fullName, orderId) =>
+  send(to, `❌ Đơn hàng #${orderId} đã bị huỷ`, layout(`
+    <h2 style="margin:0 0 16px;color:#111827;font-size:20px;">Xin chào ${fullName},</h2>
+    <p>Đơn hàng <strong>#${orderId}</strong> của bạn đã được <strong>huỷ thành công</strong>.</p>
+    <p style="background:#fee2e2;border-left:4px solid #ef4444;padding:12px 16px;border-radius:4px;color:#991b1b;">
+      Nếu bạn không thực hiện thao tác này, vui lòng liên hệ với chúng tôi ngay.
+    </p>
+    <p>Cảm ơn bạn đã mua sắm tại PetShop. 🐾</p>
+  `));

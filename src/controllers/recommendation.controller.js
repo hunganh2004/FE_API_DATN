@@ -3,8 +3,9 @@ import {
   fetchProductRecommendations,
   fetchRepurchaseReminders,
 } from '../utils/aiClient.js';
-import { Product, ProductImage, Notification } from '../models/index.js';
+import { Product, ProductImage, Notification, User } from '../models/index.js';
 import { success } from '../utils/response.js';
+import { sendPromotion } from '../utils/mailer.js';
 
 // ── Helpers ───────────────────────────────────────────────────
 
@@ -107,6 +108,16 @@ export const getRepurchaseReminders = async (req, res, next) => {
             message: `Sản phẩm "${reminder.product_name}" của bạn sắp hết, dự kiến cần mua lại vào ${reminder.predicted_date}.`,
             ref_id: reminder.product_id,
           });
+          // Gửi email nhắc mua lại
+          const user = await User.findByPk(userId, { attributes: ['email', 'full_name'] });
+          if (user) {
+            sendPromotion(
+              user.email,
+              user.full_name,
+              'Nhắc mua lại sản phẩm 🐾',
+              `Sản phẩm <strong>"${reminder.product_name}"</strong> của bạn sắp hết, dự kiến cần mua lại vào <strong>${reminder.predicted_date}</strong>.`
+            ).catch(() => {});
+          }
         }
       }
 

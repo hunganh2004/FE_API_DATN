@@ -41,11 +41,12 @@ Response:
   "product_id": 1,
   "rec_type": "association",
   "recommendations": [
-    { "product_id": 3, "confidence": 0.65, "lift": 2.3 },
-    { "product_id": 7, "confidence": 0.41, "lift": 1.8 }
+    { "product_id": 3, "score": 0.65, "confidence": 0.65, "lift": 2.3 },
+    { "product_id": 7, "score": 0.41, "confidence": 0.41, "lift": 1.8 }
   ]
 }
 ```
+> `score`: alias của `confidence`, dùng để tương thích với backend
 > `confidence`: xác suất mua sản phẩm này khi đã mua sản phẩm gốc
 > `lift`: mức độ liên hệ thực sự (> 1 là có liên hệ)
 
@@ -101,12 +102,14 @@ GET /segments/all
 ```
 Response:
 ```json
-[
-  { "segment_id": 1, "name": "Khách hàng VIP", "description": "...", "user_count": 42 },
-  { "segment_id": 2, "name": "Khách hàng trung thành", "description": "...", "user_count": 87 },
-  { "segment_id": 3, "name": "Khách hàng tiềm năng", "description": "...", "user_count": 56 },
-  { "segment_id": 4, "name": "Khách hàng không hoạt động", "description": "...", "user_count": 15 }
-]
+{
+  "segments": [
+    { "segment_id": 1, "name": "Khách hàng VIP", "description": "...", "user_count": 42 },
+    { "segment_id": 2, "name": "Khách hàng trung thành", "description": "...", "user_count": 87 },
+    { "segment_id": 3, "name": "Khách hàng tiềm năng", "description": "...", "user_count": 56 },
+    { "segment_id": 4, "name": "Khách hàng không hoạt động", "description": "...", "user_count": 15 }
+  ]
+}
 ```
 
 ---

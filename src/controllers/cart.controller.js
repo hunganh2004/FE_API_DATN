@@ -1,4 +1,4 @@
-import { CartItem, Product, ProductVariant, ProductImage } from '../models/index.js';
+import { CartItem, Product, ProductVariant, ProductImage, UserBehaviorLog } from '../models/index.js';
 import { success, error } from '../utils/response.js';
 
 export const getCart = async (req, res, next) => {
@@ -53,6 +53,12 @@ export const removeItem = async (req, res, next) => {
     const item = await CartItem.findOne({ where: { pk_cart_item_id: req.params.itemId, fk_user_id: req.user.pk_user_id } });
     if (!item) return error(res, 'Sản phẩm không có trong giỏ hàng', 404);
     await item.destroy();
+    UserBehaviorLog.create({
+      fk_user_id: req.user.pk_user_id,
+      session_id: `sys-${req.user.pk_user_id}`,
+      fk_product_id: item.fk_product_id,
+      action: 'remove_from_cart',
+    }).catch(() => {});
     return success(res, null, 'Đã xoá sản phẩm khỏi giỏ hàng');
   } catch (err) { next(err); }
 };

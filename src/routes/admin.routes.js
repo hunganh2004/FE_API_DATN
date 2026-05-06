@@ -24,6 +24,7 @@ router.get('/stats/revenue', adminController.getRevenue);
 router.get('/stats/top-products', adminController.getTopProducts);
 router.get('/stats/customer-segments', adminController.getCustomerSegments);
 router.get('/stats/behavior', adminController.getBehaviorStats);
+router.get('/behavior', adminController.getBehaviorLogs);
 
 router.get('/ai/health',          adminController.getAIHealth);
 router.post('/ai/train/all',      adminController.trainAllModels);

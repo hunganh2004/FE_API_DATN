@@ -1,6 +1,6 @@
 import { Op, QueryTypes, literal } from 'sequelize';
 import sequelize from '../config/database.js';
-import { Order, OrderItem, OrderStatusLog, Payment, User, Notification, CustomerSegment, Review, Product, ProductImage } from '../models/index.js';
+import { Order, OrderItem, OrderStatusLog, Payment, User, Notification, CustomerSegment, Review, Product, ProductImage, UserBehaviorLog } from '../models/index.js';
 import { success, paginated, error } from '../utils/response.js';
 import { fetchAllSegments, trainAll, trainModel, isAIHealthy } from '../utils/aiClient.js';
 import { sendPromotion } from '../utils/mailer.js';
@@ -50,6 +50,15 @@ export const updateOrderStatus = async (req, res, next) => {
     if (!order) return error(res, 'Đơn hàng không tồn tại', 404);
 
     await order.update({ order_status: status });
+
+    // COD: tự động đánh dấu đã thanh toán khi giao hàng thành công
+    if (status === 'delivered' && order.payment_method === 'cod') {
+      await order.update({ payment_status: 'paid' });
+      await Payment.update(
+        { status: 'success', paid_at: new Date() },
+        { where: { fk_order_id: order.pk_order_id } }
+      );
+    }
     await OrderStatusLog.create({ fk_order_id: order.pk_order_id, status, note, fk_changed_by: req.user.pk_user_id });
     await Notification.create({
       fk_user_id: order.fk_user_id, type: 'order_update',
@@ -293,6 +302,27 @@ export const getBehaviorStats = async (req, res, next) => {
       { replacements, type: QueryTypes.SELECT }
     );
     return success(res, rows);
+  } catch (err) { next(err); }
+};
+
+export const getBehaviorLogs = async (req, res, next) => {
+  try {
+    const { user_id, action, page = 1, limit = 50 } = req.query;
+    const where = {};
+    if (user_id) where.fk_user_id = user_id;
+    if (action) where.action = action;
+
+    const { count, rows } = await UserBehaviorLog.findAndCountAll({
+      where,
+      include: [
+        { model: User, as: 'user', attributes: ['pk_user_id', 'full_name', 'email'], required: false },
+        { model: Product, as: 'product', attributes: ['pk_product_id', 'name'], required: false },
+      ],
+      order: [['created_at', 'DESC']],
+      limit: parseInt(limit),
+      offset: (page - 1) * limit,
+    });
+    return paginated(res, rows, count, page, limit);
   } catch (err) { next(err); }
 };
 

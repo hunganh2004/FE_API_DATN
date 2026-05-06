@@ -1,7 +1,7 @@
 import sequelize from '../config/database.js';
-import { Order, OrderItem, OrderStatusLog, Payment, CartItem, Product, ProductVariant, Coupon, Notification, User } from '../models/index.js';
+import { Order, OrderItem, OrderStatusLog, Payment, CartItem, Product, ProductVariant, Coupon, Notification, User, UserBehaviorLog } from '../models/index.js';
 import { success, created, paginated, error } from '../utils/response.js';
-import { sendOrderConfirm } from '../utils/mailer.js';
+import { sendOrderConfirm, sendOrderCancelled } from '../utils/mailer.js';
 
 export const getMyOrders = async (req, res, next) => {
   try {
@@ -119,6 +119,16 @@ export const createOrder = async (req, res, next) => {
 
     await t.commit();
 
+    // Ghi log purchase cho từng sản phẩm
+    for (const item of cartItems) {
+      UserBehaviorLog.create({
+        fk_user_id: userId,
+        session_id: `sys-${userId}`,
+        fk_product_id: item.fk_product_id,
+        action: 'purchase',
+      }).catch(() => {});
+    }
+
     // Gửi email xác nhận đơn hàng
     sendOrderConfirm(req.user.email, req.user.full_name, order.pk_order_id, total).catch(() => {});
 
@@ -155,6 +165,14 @@ export const cancelOrder = async (req, res, next) => {
 
     await OrderStatusLog.create({ fk_order_id: order.pk_order_id, status: 'cancelled', note: 'Người dùng huỷ đơn', fk_changed_by: req.user.pk_user_id }, { transaction: t });
     await t.commit();
+    sendOrderCancelled(req.user.email, req.user.full_name, order.pk_order_id).catch(() => {});
+    await Notification.create({
+      fk_user_id: req.user.pk_user_id,
+      type: 'order_update',
+      title: 'Đơn hàng đã bị huỷ',
+      message: `Đơn hàng #${order.pk_order_id} của bạn đã được huỷ thành công.`,
+      ref_id: order.pk_order_id,
+    });
     return success(res, null, 'Huỷ đơn hàng thành công');
   } catch (err) {
     await t.rollback();

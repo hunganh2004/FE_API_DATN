@@ -900,6 +900,33 @@ Top 20 sản phẩm bán chạy nhất, hỗ trợ lọc theo khoảng thời gi
 
 ---
 
+### GET /admin/behavior — [ADMIN]
+Log hành vi người dùng gần đây, hỗ trợ lọc và phân trang.
+
+**Query Params**
+| Param | Kiểu | Mô tả |
+|---|---|---|
+| `user_id` | number | Lọc theo user |
+| `action` | string | `view` \| `search` \| `add_to_cart` \| `remove_from_cart` \| `purchase` \| `wishlist` |
+| `page` | number | Trang (mặc định: 1) |
+| `limit` | number | Số item/trang (mặc định: 50) |
+
+**Response 200**
+```json
+{
+  "data": [
+    {
+      "pk_log_id": 1, "action": "view", "search_query": null, "duration_sec": 30, "created_at": "...",
+      "user": { "pk_user_id": 1, "full_name": "Nguyen Van A", "email": "user@example.com" },
+      "product": { "pk_product_id": 1, "name": "Thức ăn cho chó" }
+    }
+  ],
+  "pagination": { "total": 500, "page": 1, "limit": 50, "totalPages": 10 }
+}
+```
+
+---
+
 ### GET /admin/stats/behavior — [ADMIN]
 Thống kê hành vi người dùng theo loại action, hỗ trợ lọc theo thời gian.
 

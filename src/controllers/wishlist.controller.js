@@ -1,4 +1,4 @@
-import { Wishlist, Product, ProductImage } from '../models/index.js';
+import { Wishlist, Product, ProductImage, UserBehaviorLog } from '../models/index.js';
 import { success, error } from '../utils/response.js';
 
 export const getWishlist = async (req, res, next) => {
@@ -19,6 +19,14 @@ export const addToWishlist = async (req, res, next) => {
     const [, isNew] = await Wishlist.findOrCreate({
       where: { fk_user_id: req.user.pk_user_id, fk_product_id: req.params.productId },
     });
+    if (isNew) {
+      UserBehaviorLog.create({
+        fk_user_id: req.user.pk_user_id,
+        session_id: `sys-${req.user.pk_user_id}`,
+        fk_product_id: req.params.productId,
+        action: 'wishlist',
+      }).catch(() => {});
+    }
     return success(res, null, isNew ? 'Đã thêm vào danh sách yêu thích' : 'Sản phẩm đã có trong danh sách', isNew ? 201 : 200);
   } catch (err) { next(err); }
 };
@@ -27,6 +35,12 @@ export const removeFromWishlist = async (req, res, next) => {
   try {
     const deleted = await Wishlist.destroy({ where: { fk_user_id: req.user.pk_user_id, fk_product_id: req.params.productId } });
     if (!deleted) return error(res, 'Sản phẩm không có trong danh sách yêu thích', 404);
+    UserBehaviorLog.create({
+      fk_user_id: req.user.pk_user_id,
+      session_id: `sys-${req.user.pk_user_id}`,
+      fk_product_id: req.params.productId,
+      action: 'remove_wishlist',
+    }).catch(() => {});
     return success(res, null, 'Đã xoá khỏi danh sách yêu thích');
   } catch (err) { next(err); }
 };
