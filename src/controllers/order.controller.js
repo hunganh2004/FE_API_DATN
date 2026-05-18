@@ -1,3 +1,4 @@
+import { Op } from 'sequelize';
 import sequelize from '../config/database.js';
 import { Order, OrderItem, OrderStatusLog, Payment, CartItem, Product, ProductVariant, Coupon, Notification, User, UserBehaviorLog } from '../models/index.js';
 import { success, created, paginated, error } from '../utils/response.js';
@@ -5,12 +6,22 @@ import { sendOrderConfirm, sendOrderCancelled } from '../utils/mailer.js';
 
 export const getMyOrders = async (req, res, next) => {
   try {
-    const { page = 1, limit = 10, status } = req.query;
+    const { page = 1, limit = 10, status, date_from, date_to } = req.query;
     const where = { fk_user_id: req.user.pk_user_id };
     if (status) where.order_status = status;
+    if (date_from || date_to) {
+      where.created_at = {};
+      if (date_from) where.created_at[Op.gte] = new Date(date_from);
+      if (date_to) {
+        const end = new Date(date_to);
+        end.setHours(23, 59, 59, 999);
+        where.created_at[Op.lte] = end;
+      }
+    }
 
     const { count, rows } = await Order.findAndCountAll({
       where,
+      distinct: true,
       include: [{ model: OrderItem, as: 'items' }],
       order: [['created_at', 'DESC']],
       limit: parseInt(limit),

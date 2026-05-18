@@ -3,7 +3,8 @@ import {
   fetchProductRecommendations,
   fetchRepurchaseReminders,
 } from '../utils/aiClient.js';
-import { Product, ProductImage, Notification, User } from '../models/index.js';
+import { Product, ProductImage, Notification, User, UserBehaviorLog } from '../models/index.js';
+import { Op, fn, col, literal } from 'sequelize';
 import { success } from '../utils/response.js';
 import { sendPromotion } from '../utils/mailer.js';
 
@@ -22,14 +23,45 @@ const hydrateProducts = (productIds) => {
   });
 };
 
-/** Fallback: sản phẩm mới nhất khi AI không phản hồi */
-const getTrending = () =>
-  Product.findAll({
-    where: { is_active: 1 },
-    include: [{ model: ProductImage, as: 'images', where: { is_primary: 1 }, required: false }],
-    order: [['created_at', 'DESC']],
+/** Fallback: sản phẩm trending (xem + mua nhiều nhất trong 30 ngày) */
+const getTrending = async () => {
+  const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+
+  // Đếm số lượt view + purchase theo product trong 30 ngày
+  const logs = await UserBehaviorLog.findAll({
+    attributes: ['fk_product_id', [fn('COUNT', col('pk_log_id')), 'score']],
+    where: {
+      fk_product_id: { [Op.ne]: null },
+      action: { [Op.in]: ['view', 'purchase', 'add_to_cart'] },
+      created_at: { [Op.gte]: since },
+    },
+    group: ['fk_product_id'],
+    order: [[literal('score'), 'DESC']],
     limit: 10,
+    raw: true,
   });
+
+  const productIds = logs.map(l => l.fk_product_id);
+
+  // Nếu chưa có đủ behavior data thì fallback về mới nhất
+  if (productIds.length < 5) {
+    return Product.findAll({
+      where: { is_active: 1 },
+      include: [{ model: ProductImage, as: 'images', where: { is_primary: 1 }, required: false }],
+      order: [['created_at', 'DESC']],
+      limit: 10,
+    });
+  }
+
+  const products = await Product.findAll({
+    where: { pk_product_id: productIds, is_active: 1 },
+    include: [{ model: ProductImage, as: 'images', where: { is_primary: 1 }, required: false }],
+  });
+
+  // Giữ đúng thứ tự score
+  const map = Object.fromEntries(products.map(p => [p.pk_product_id, p]));
+  return productIds.map(id => map[id]).filter(Boolean);
+};
 
 // ── Controllers ───────────────────────────────────────────────
 

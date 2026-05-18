@@ -1,9 +1,15 @@
 /**
  * AI Service HTTP Client
  * Wrapper gọi Python FastAPI tại AI_SERVICE_URL với timeout và fallback.
+ * Groq client dùng cho chatbot RAG.
  */
 
 import axios from 'axios';
+import Groq from 'groq-sdk';
+
+// ── Groq Client ───────────────────────────────────────────────
+export const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
+export const GROQ_MODEL = 'llama-3.1-8b-instant';
 
 const AI_URL = process.env.AI_SERVICE_URL || 'http://localhost:8001';
 const TIMEOUT = 5000;

@@ -1,0 +1,21 @@
+2.3.	Retrieval-Augmented Generation (RAG)
+2.3.1.	Định nghĩa
+Retrieval-Augmented Generation (RAG) là một phương pháp kết hợp giữa hai khả năng:
+	Tìm kiếm và truy xuất thông tin từ các nguồn dữ liệu đã có sẵn (cơ sở tri thức nội bộ, tài liệu lưu trữ, internet…).
+	Tạo sinh câu trả lời thông qua các mô hình ngôn ngữ lớn LLM.
+Nhờ cách phối hợp này, RAG giúp hệ thống AI vừa khai thác được kiến thức mới nhất, vừa đưa ra phản hồi mạch lạc và sát với nhu cầu của người dùng.
+2.3.2.	Cơ chế hoạt động của RAG
+RAG hoạt động bằng cách kết hợp khả năng tìm kiếm thông tin từ kho dữ liệu với sức mạnh tạo sinh của mô hình ngôn ngữ lớn. Quy trình này thường được triển khai qua bốn bước rõ ràng, đảm bảo câu trả lời vừa chính xác vừa có căn cứ.
+a)	Tiếp nhận truy vấn từ người dùng
+Hệ thống nhận câu hỏi hoặc yêu cầu đầu vào và phân tích nội dung để xác định ý định tìm kiếm thông tin.
+b)	Truy xuất dữ liệu liên quan
+Thông tin cần thiết được tìm kiếm từ các kho dữ liệu được mã hóa dưới dạng vector (vector database), giúp xác định nhanh những tài liệu có mức độ liên quan cao nhất.
+c)	Bổ sung thông tin vào yêu cầu cho LLM
+Những dữ liệu vừa truy xuất sẽ được chèn vào prompt, cung cấp cho LLM bối cảnh cần thiết trước khi tạo câu trả lời.
+d)	Tạo sinh nội dung có dẫn chứng
+Mô hình ngôn ngữ lớn tổng hợp dữ liệu, diễn giải thành câu trả lời mạch lạc và trích dẫn nguồn thông tin khi cần thiết, đảm bảo độ tin cậy.
+ 
+Hình 2-1.	Quy trình Retrieval-Augmented Generation
+2.3.3.	Ứng dụng RAG trong Chatbot hỗ trợ khách hàng
+Thay vì dựa hoàn toàn vào dữ liệu huấn luyện cũ, chatbot RAG sẽ truy xuất thông tin mới nhất từ cơ sở dữ liệu nội bộ (như chính sách bảo hành, quy trình đổi trả, tình trạng đơn hàng) để làm ngữ cảnh. 
+Đặc biệt trong đề tài này, thành phần tạo sinh (LLM) của Chatbot được triển khai thông qua việc tích hợp API từ nền tảng Groq (https://groq.com/). Việc ứng dụng hạ tầng suy luận tốc độ cao của Groq giúp mô hình xử lý ngữ cảnh được truy xuất và tổng hợp câu trả lời gần như tức thời. Sự kết hợp giữa RAG và Groq API giúp giảm thiểu tối đa tình trạng phản hồi sai (hallucination) hoặc dữ liệu lỗi thời, nâng cao trải nghiệm khách hàng và giảm áp lực cho đội ngũ chăm sóc.

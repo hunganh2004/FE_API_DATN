@@ -15,6 +15,7 @@ import recommendationRoutes from './recommendation.routes.js';
 import wishlistRoutes from './wishlist.routes.js';
 import notificationRoutes from './notification.routes.js';
 import adminRoutes from './admin.routes.js';
+import chatRoutes from './chat.routes.js';
 
 const router = Router();
 
@@ -34,5 +35,6 @@ router.use('/recommendations', recommendationRoutes);
 router.use('/wishlist',        wishlistRoutes);
 router.use('/notifications',   notificationRoutes);
 router.use('/admin',           adminRoutes);
+router.use('/chat',            chatRoutes);
 
 export default router;

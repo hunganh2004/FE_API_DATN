@@ -9,13 +9,23 @@ import { sendPromotion } from '../utils/mailer.js';
 
 export const getOrders = async (req, res, next) => {
   try {
-    const { page = 1, limit = 20, status, payment_status } = req.query;
+    const { page = 1, limit = 20, status, payment_status, date_from, date_to } = req.query;
     const where = {};
     if (status) where.order_status = status;
     if (payment_status) where.payment_status = payment_status;
+    if (date_from || date_to) {
+      where.created_at = {};
+      if (date_from) where.created_at[Op.gte] = new Date(date_from);
+      if (date_to) {
+        const end = new Date(date_to);
+        end.setHours(23, 59, 59, 999);
+        where.created_at[Op.lte] = end;
+      }
+    }
 
     const { count, rows } = await Order.findAndCountAll({
       where,
+      distinct: true,
       include: [
         { model: User, as: 'user', attributes: ['pk_user_id', 'full_name', 'email', 'phone'] },
         { model: OrderItem, as: 'items' },
@@ -112,23 +122,42 @@ export const toggleUserActive = async (req, res, next) => {
 
 export const getRevenue = async (req, res, next) => {
   try {
-    const { year = new Date().getFullYear(), week } = req.query;
+    const { period = 'month', year = new Date().getFullYear(), month, week } = req.query;
 
     let sql, replacements;
-    if (week) {
-      // Doanh thu theo tuần cụ thể trong năm (trả về từng ngày trong tuần đó)
+
+    if (period === 'all') {
+      // Tổng doanh thu toàn thời gian — gộp theo từng năm
+      sql = `SELECT order_year AS year,
+                    SUM(total_orders) AS total_orders, SUM(revenue) AS revenue
+             FROM v_revenue_by_date
+             GROUP BY order_year
+             ORDER BY order_year`;
+      replacements = {};
+    } else if (period === 'week' && week) {
+      // Doanh thu theo tuần cụ thể — trả về từng ngày trong tuần đó
       sql = `SELECT order_date, order_month, order_year, total_orders, revenue
              FROM v_revenue_by_date
              WHERE order_year = :year AND WEEK(order_date, 1) = :week
              ORDER BY order_date`;
       replacements = { year, week };
-    } else {
-      // Doanh thu theo năm (trả về từng ngày)
-      sql = `SELECT order_date, order_month, order_year, total_orders, revenue
+    } else if (period === 'year') {
+      // Doanh thu theo năm — gộp theo từng tháng (12 tháng)
+      sql = `SELECT order_month AS month, order_year AS year,
+                    SUM(total_orders) AS total_orders, SUM(revenue) AS revenue
              FROM v_revenue_by_date
              WHERE order_year = :year
-             ORDER BY order_date`;
+             GROUP BY order_month, order_year
+             ORDER BY order_month`;
       replacements = { year };
+    } else {
+      // Doanh thu theo tháng cụ thể — trả về từng ngày trong tháng đó
+      const m = month || new Date().getMonth() + 1;
+      sql = `SELECT order_date, order_month, order_year, total_orders, revenue
+             FROM v_revenue_by_date
+             WHERE order_year = :year AND order_month = :month
+             ORDER BY order_date`;
+      replacements = { year, month: m };
     }
 
     const rows = await sequelize.query(sql, { replacements, type: QueryTypes.SELECT });
