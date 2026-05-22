@@ -1,16 +1,40 @@
-import { Op } from 'sequelize';
+import { Op, literal } from 'sequelize';
 import sequelize from '../config/database.js';
 import { Product, ProductVariant, ProductImage, ProductSpec, Category, PetType, Review, User } from '../models/index.js';
 import { success, created, paginated, error } from '../utils/response.js';
 import { createSlug } from '../utils/slugify.js';
 import { deleteUploadedFile } from '../utils/fileHelper.js';
 
+const EXPIRY_WARNING_DAYS = 30;
+
+/** Tính số ngày còn lại đến hạn, null nếu không có expiry_date */
+const calcDaysUntilExpiry = (expiryDate) => {
+  if (!expiryDate) return null;
+  const diff = Math.ceil((new Date(expiryDate) - new Date()) / (1000 * 60 * 60 * 24));
+  return diff;
+};
+
+/** Gắn days_until_expiry và expiring_soon vào product plain object */
+const attachExpiryInfo = (product) => {
+  const plain = product.toJSON ? product.toJSON() : { ...product };
+  const days = calcDaysUntilExpiry(plain.expiry_date);
+  plain.days_until_expiry = days;
+  plain.expiring_soon = days !== null && days <= EXPIRY_WARNING_DAYS && days >= 0;
+  return plain;
+};
+
 export const getAll = async (req, res, next) => {
   try {
-    const { q, category_id, pet_type_id, price_min, price_max, stock_min, stock_max, in_stock, sort = 'created_at', order = 'DESC', page = 1, limit = 20 } = req.query;
+    const { q, category_id, pet_type_id, price_min, price_max, stock_min, stock_max, in_stock, is_consumable, sort = 'created_at', order = 'DESC', page = 1, limit = 20 } = req.query;
 
     const where = { is_active: 1 };
+    // Ẩn sản phẩm đã hết hạn
+    where[Op.or] = [
+      { expiry_date: null },
+      { expiry_date: { [Op.gte]: new Date() } },
+    ];
     if (q) where.name = { [Op.like]: `%${q}%` };
+    if (is_consumable !== undefined) where.is_consumable = parseInt(is_consumable);
 
     // Nếu lọc theo category, tự động include cả danh mục con
     if (category_id) {
@@ -45,11 +69,10 @@ export const getAll = async (req, res, next) => {
     ];
     if (pet_type_id) include.push({ model: PetType, as: 'petTypes', where: { pk_pet_type_id: pet_type_id }, required: true });
 
-    const ALLOWED_SORT = ['created_at', 'price', 'stock', 'name', 'avg_rating'];
+    const ALLOWED_SORT = ['created_at', 'price', 'stock', 'name', 'avg_rating', 'expiry_date'];
     const sortField = ALLOWED_SORT.includes(sort) ? sort : 'created_at';
     const sortOrder = order.toUpperCase() === 'ASC' ? 'ASC' : 'DESC';
 
-    // avg_rating cần subquery từ bảng reviews
     const effectivePriceExpr = sequelize.literal('COALESCE(`Product`.`sale_price`, `Product`.`price`)');
 
     const orderClause = sortField === 'avg_rating'
@@ -60,6 +83,13 @@ export const getAll = async (req, res, next) => {
       : sortField === 'price'
       ? [
           [effectivePriceExpr, sortOrder],
+          ['pk_product_id', 'DESC'],
+        ]
+      : sortField === 'expiry_date'
+      ? [
+          // NULL (không có hạn) luôn xuống cuối khi sort ASC
+          [sequelize.literal('ISNULL(`Product`.`expiry_date`)'), 'ASC'],
+          ['expiry_date', sortOrder],
           ['pk_product_id', 'DESC'],
         ]
       : [
@@ -76,14 +106,18 @@ export const getAll = async (req, res, next) => {
       subQuery: false,
     });
 
-    return paginated(res, rows, count, page, limit);
+    return paginated(res, rows.map(attachExpiryInfo), count, page, limit);
   } catch (err) { next(err); }
 };
 
 export const getById = async (req, res, next) => {
   try {
     const product = await Product.findOne({
-      where: { pk_product_id: req.params.id, is_active: 1 },
+      where: {
+        pk_product_id: req.params.id,
+        is_active: 1,
+        [Op.or]: [{ expiry_date: null }, { expiry_date: { [Op.gte]: new Date() } }],
+      },
       include: [
         { model: ProductVariant, as: 'variants' },
         { model: ProductImage, as: 'images' },
@@ -98,7 +132,7 @@ export const getById = async (req, res, next) => {
       ],
     });
     if (!product) return error(res, 'Sản phẩm không tồn tại', 404);
-    return success(res, product);
+    return success(res, attachExpiryInfo(product));
   } catch (err) { next(err); }
 };
 

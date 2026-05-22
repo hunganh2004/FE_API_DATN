@@ -14,6 +14,7 @@ const Product = sequelize.define('Product', {
   brand:          { type: DataTypes.STRING(100) },
   weight_gram:    { type: DataTypes.INTEGER },
   is_consumable:  { type: DataTypes.TINYINT, defaultValue: 0 },
+  expiry_date:    { type: DataTypes.DATEONLY, defaultValue: null },
   is_active:      { type: DataTypes.TINYINT, defaultValue: 1 },
   created_at:     { type: DataTypes.DATE, defaultValue: DataTypes.NOW },
   updated_at:     { type: DataTypes.DATE, defaultValue: DataTypes.NOW },

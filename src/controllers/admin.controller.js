@@ -1,6 +1,6 @@
 import { Op, QueryTypes, literal } from 'sequelize';
 import sequelize from '../config/database.js';
-import { Order, OrderItem, OrderStatusLog, Payment, User, Notification, CustomerSegment, Review, Product, ProductImage, UserBehaviorLog } from '../models/index.js';
+import { Order, OrderItem, OrderStatusLog, Payment, User, UserAddress, Notification, CustomerSegment, Review, Product, ProductImage, UserBehaviorLog } from '../models/index.js';
 import { success, paginated, error } from '../utils/response.js';
 import { fetchAllSegments, trainAll, trainModel, isAIHealthy } from '../utils/aiClient.js';
 import { sendPromotion } from '../utils/mailer.js';
@@ -87,7 +87,11 @@ export const getUsers = async (req, res, next) => {
   try {
     const { page = 1, limit = 20, q } = req.query;
     const where = { role: 'customer' };
-    if (q) where[Op.or] = [{ full_name: { [Op.like]: `%${q}%` } }, { email: { [Op.like]: `%${q}%` } }];
+    if (q) where[Op.or] = [
+      { full_name: { [Op.like]: `%${q}%` } },
+      { email: { [Op.like]: `%${q}%` } },
+      { phone: { [Op.like]: `%${q}%` } },
+    ];
 
     const { count, rows } = await User.findAndCountAll({
       where,
@@ -102,10 +106,70 @@ export const getUsers = async (req, res, next) => {
 
 export const getUserDetail = async (req, res, next) => {
   try {
-    const user = await User.findByPk(req.params.id, { attributes: { exclude: ['password_hash'] } });
+    const user = await User.findByPk(req.params.id, {
+      attributes: { exclude: ['password_hash'] },
+      include: [
+        { model: UserAddress, as: 'addresses' },
+        { model: CustomerSegment, as: 'segments', through: { attributes: [] } },
+      ],
+    });
     if (!user) return error(res, 'Người dùng không tồn tại', 404);
-    const recent_orders = await Order.findAll({ where: { fk_user_id: user.pk_user_id }, order: [['created_at', 'DESC']], limit: 5 });
-    return success(res, { user, recent_orders });
+
+    // Thống kê tổng hợp
+    const stats = await sequelize.query(
+      `SELECT
+        COUNT(*) AS total_orders,
+        SUM(total) AS total_spent,
+        SUM(CASE WHEN order_status = 'cancelled' THEN 1 ELSE 0 END) AS cancelled_orders,
+        MAX(created_at) AS last_order_at
+       FROM tbl_orders
+       WHERE fk_user_id = :userId AND order_status != 'cancelled'`,
+      { replacements: { userId: req.params.id }, type: QueryTypes.SELECT }
+    );
+
+    // Top sản phẩm hay mua nhất
+    const topProducts = await sequelize.query(
+      `SELECT p.pk_product_id, p.name, SUM(oi.quantity) AS total_bought
+       FROM tbl_order_items oi
+       JOIN tbl_products p ON p.pk_product_id = oi.fk_product_id
+       JOIN tbl_orders o ON o.pk_order_id = oi.fk_order_id
+       WHERE o.fk_user_id = :userId AND o.order_status != 'cancelled'
+       GROUP BY p.pk_product_id
+       ORDER BY total_bought DESC
+       LIMIT 5`,
+      { replacements: { userId: req.params.id }, type: QueryTypes.SELECT }
+    );
+
+    return success(res, {
+      user,
+      stats: stats[0],
+      top_products: topProducts,
+    });
+  } catch (err) { next(err); }
+};
+
+export const getUserOrders = async (req, res, next) => {
+  try {
+    const user = await User.findByPk(req.params.id, { attributes: ['pk_user_id'] });
+    if (!user) return error(res, 'Người dùng không tồn tại', 404);
+
+    const { page = 1, limit = 10, status, payment_status } = req.query;
+    const where = { fk_user_id: req.params.id };
+    if (status) where.order_status = status;
+    if (payment_status) where.payment_status = payment_status;
+
+    const { count, rows } = await Order.findAndCountAll({
+      where,
+      include: [
+        { model: OrderItem, as: 'items' },
+        { model: Payment, as: 'payment' },
+      ],
+      order: [['created_at', 'DESC']],
+      limit: parseInt(limit),
+      offset: (page - 1) * limit,
+      distinct: true,
+    });
+    return paginated(res, rows, count, page, limit);
   } catch (err) { next(err); }
 };
 
@@ -305,6 +369,34 @@ export const deleteNotification = async (req, res, next) => {
   } catch (err) { next(err); }
 };
 
+// ── Sản phẩm sắp hết hạn ─────────────────────────────────────
+
+export const getExpiringProducts = async (req, res, next) => {
+  try {
+    const days = parseInt(req.query.days) || 30;
+    const threshold = new Date();
+    threshold.setDate(threshold.getDate() + days);
+
+    const products = await Product.findAll({
+      where: {
+        is_active: 1,
+        is_consumable: 1,
+        expiry_date: { [Op.between]: [new Date(), threshold] },
+      },
+      include: [{ model: ProductImage, as: 'images', where: { is_primary: 1 }, required: false }],
+      order: [['expiry_date', 'ASC']],
+    });
+
+    const result = products.map(p => {
+      const plain = p.toJSON();
+      plain.days_until_expiry = Math.ceil((new Date(plain.expiry_date) - new Date()) / (1000 * 60 * 60 * 24));
+      return plain;
+    });
+
+    return success(res, result);
+  } catch (err) { next(err); }
+};
+
 export const getBehaviorStats = async (req, res, next) => {
   try {
     const { period, year, month, week } = req.query;
@@ -375,6 +467,51 @@ export const getPayments = async (req, res, next) => {
       offset: (page - 1) * limit,
     });
     return paginated(res, rows, count, page, limit);
+  } catch (err) { next(err); }
+};
+
+export const getPaymentDetail = async (req, res, next) => {
+  try {
+    const payment = await Payment.findByPk(req.params.id, {
+      include: [{
+        model: Order, as: 'order',
+        include: [
+          { model: User, as: 'user', attributes: ['pk_user_id', 'full_name', 'email', 'phone'] },
+          { model: OrderItem, as: 'items' },
+        ],
+      }],
+    });
+    if (!payment) return error(res, 'Không tìm thấy thông tin thanh toán', 404);
+    return success(res, payment);
+  } catch (err) { next(err); }
+};
+
+export const refundPayment = async (req, res, next) => {
+  try {
+    const payment = await Payment.findByPk(req.params.id, {
+      include: [{ model: Order, as: 'order' }],
+    });
+    if (!payment) return error(res, 'Không tìm thấy thông tin thanh toán', 404);
+    if (payment.status !== 'success') return error(res, 'Chỉ có thể hoàn tiền giao dịch đã thành công', 400);
+    if (payment.method === 'cod') return error(res, 'Không thể hoàn tiền tự động với phương thức COD', 400);
+
+    // Cập nhật trạng thái payment về refunded
+    await payment.update({ status: 'refunded' });
+    await Order.update(
+      { payment_status: 'refunded' },
+      { where: { pk_order_id: payment.fk_order_id } }
+    );
+
+    // Gửi thông báo cho user
+    await Notification.create({
+      fk_user_id: payment.order.fk_user_id,
+      type: 'order_update',
+      title: 'Hoàn tiền thành công',
+      message: `Đơn hàng #${payment.fk_order_id} đã được hoàn tiền ${Number(payment.amount).toLocaleString('vi-VN')}đ.`,
+      ref_id: payment.fk_order_id,
+    });
+
+    return success(res, null, 'Đã cập nhật trạng thái hoàn tiền');
   } catch (err) { next(err); }
 };
 

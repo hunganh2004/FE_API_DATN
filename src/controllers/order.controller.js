@@ -163,8 +163,18 @@ export const cancelOrder = async (req, res, next) => {
       await t.rollback();
       return error(res, 'Không thể huỷ đơn hàng ở trạng thái này', 400);
     }
+    if (order.payment_status === 'paid') {
+      await t.rollback();
+      return error(res, 'Đơn hàng đã thanh toán, vui lòng liên hệ admin để được hỗ trợ huỷ', 400);
+    }
 
     await order.update({ order_status: 'cancelled' }, { transaction: t });
+
+    // Cập nhật payment về cancelled nếu chưa thanh toán
+    await Payment.update(
+      { status: 'failed' },
+      { where: { fk_order_id: order.pk_order_id, status: 'pending' }, transaction: t }
+    );
 
     for (const item of order.items) {
       if (item.fk_variant_id) {

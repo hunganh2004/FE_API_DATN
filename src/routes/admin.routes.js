@@ -12,9 +12,12 @@ router.patch('/orders/:id/status', adminController.updateOrderStatus);
 
 router.get('/users', adminController.getUsers);
 router.get('/users/:id', adminController.getUserDetail);
+router.get('/users/:id/orders', adminController.getUserOrders);
 router.patch('/users/:id/toggle-active', adminController.toggleUserActive);
 
 router.get('/payments', adminController.getPayments);
+router.get('/payments/:id', adminController.getPaymentDetail);
+router.patch('/payments/:id/refund', adminController.refundPayment);
 
 router.get('/reviews', adminController.getReviews);
 router.delete('/reviews/:id', adminController.deleteReview);
@@ -33,5 +36,7 @@ router.post('/ai/train/:model',   adminController.trainSingleModel);
 router.get('/notifications',      adminController.getNotifications);
 router.post('/notifications',     adminController.sendNotification);
 router.delete('/notifications/:id', adminController.deleteNotification);
+
+router.get('/products/expiring',  adminController.getExpiringProducts);
 
 export default router;
