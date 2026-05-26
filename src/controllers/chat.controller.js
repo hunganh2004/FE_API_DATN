@@ -141,7 +141,7 @@ async function retrieveByIntent({ intent, keywords = [], limit = 5 }, userId) {
         where: { fk_user_id: userId },
         include: [
           { model: OrderItem, as: 'items', include: [{ model: Product, as: 'product', attributes: ['name'] }] },
-          { model: OrderStatusLog, as: 'statusLogs', limit: 2, order: [['created_at', 'DESC']] },
+          { model: OrderStatusLog, as: 'statusLogs', limit: 2, order: [['changed_at', 'DESC']] },
         ],
         order: [['created_at', 'DESC']],
         limit: 3,
@@ -220,6 +220,7 @@ export const chat = async (req, res) => {
 
     // Bước 1: Phân tích intent
     const intentData = await detectIntent(message);
+    console.log('[Chat] Intent:', JSON.stringify(intentData));
 
     // Bước 2: Retrieve context từ DB
     const { contextText, products } = await retrieveByIntent(intentData, userId);

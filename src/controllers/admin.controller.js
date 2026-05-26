@@ -119,11 +119,11 @@ export const getUserDetail = async (req, res, next) => {
     const stats = await sequelize.query(
       `SELECT
         COUNT(*) AS total_orders,
-        SUM(total) AS total_spent,
+        SUM(CASE WHEN order_status != 'cancelled' THEN total ELSE 0 END) AS total_spent,
         SUM(CASE WHEN order_status = 'cancelled' THEN 1 ELSE 0 END) AS cancelled_orders,
-        MAX(created_at) AS last_order_at
+        MAX(CASE WHEN order_status != 'cancelled' THEN created_at END) AS last_order_at
        FROM tbl_orders
-       WHERE fk_user_id = :userId AND order_status != 'cancelled'`,
+       WHERE fk_user_id = :userId`,
       { replacements: { userId: req.params.id }, type: QueryTypes.SELECT }
     );
 

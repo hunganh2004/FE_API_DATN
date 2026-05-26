@@ -24,14 +24,15 @@ const hydrateProducts = (productIds) => {
 };
 
 /** Fallback: sản phẩm trending (xem + mua nhiều nhất trong 30 ngày) */
-const getTrending = async () => {
+const getTrending = async (excludeId = null) => {
   const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
 
-  // Đếm số lượt view + purchase theo product trong 30 ngày
   const logs = await UserBehaviorLog.findAll({
     attributes: ['fk_product_id', [fn('COUNT', col('pk_log_id')), 'score']],
     where: {
-      fk_product_id: { [Op.ne]: null },
+      fk_product_id: excludeId
+        ? { [Op.ne]: null, [Op.notIn]: [excludeId] }
+        : { [Op.ne]: null },
       action: { [Op.in]: ['view', 'purchase', 'add_to_cart'] },
       created_at: { [Op.gte]: since },
     },
@@ -43,10 +44,11 @@ const getTrending = async () => {
 
   const productIds = logs.map(l => l.fk_product_id);
 
-  // Nếu chưa có đủ behavior data thì fallback về mới nhất
   if (productIds.length < 5) {
+    const where = { is_active: 1 };
+    if (excludeId) where.pk_product_id = { [Op.ne]: excludeId };
     return Product.findAll({
-      where: { is_active: 1 },
+      where,
       include: [{ model: ProductImage, as: 'images', where: { is_primary: 1 }, required: false }],
       order: [['created_at', 'DESC']],
       limit: 10,
@@ -58,7 +60,6 @@ const getTrending = async () => {
     include: [{ model: ProductImage, as: 'images', where: { is_primary: 1 }, required: false }],
   });
 
-  // Giữ đúng thứ tự score
   const map = Object.fromEntries(products.map(p => [p.pk_product_id, p]));
   return productIds.map(id => map[id]).filter(Boolean);
 };
@@ -95,15 +96,18 @@ export const getHomepage = async (req, res, next) => {
 export const getForProduct = async (req, res, next) => {
   try {
     const { productId } = req.params;
+    const currentId = parseInt(productId);
     let products;
 
     try {
       const aiData = await fetchProductRecommendations(productId);
-      const productIds = aiData.recommendations.map(r => r.product_id);
+      const productIds = aiData.recommendations
+        .map(r => r.product_id)
+        .filter(id => id !== currentId);
       products = await hydrateProducts(productIds);
-      if (!products.length) products = await getTrending();
+      if (!products.length) products = await getTrending(currentId);
     } catch {
-      products = await getTrending();
+      products = await getTrending(currentId);
     }
 
     return success(res, products);
@@ -123,8 +127,37 @@ export const getRepurchaseReminders = async (req, res, next) => {
     try {
       const aiData = await fetchRepurchaseReminders(userId, daysAhead);
 
+      // Lấy expiry_date của các sản phẩm trong reminders
+      const productIds = aiData.reminders.map(r => r.product_id);
+      const products = productIds.length
+        ? await Product.findAll({
+            where: { pk_product_id: productIds },
+            attributes: ['pk_product_id', 'expiry_date'],
+          })
+        : [];
+      const expiryMap = Object.fromEntries(
+        products.map(p => [p.pk_product_id, p.expiry_date])
+      );
+
+      // Kết hợp AI prediction + expiry_date: lấy ngày nào sớm hơn
+      const reminders = aiData.reminders.map(reminder => {
+        const expiry = expiryMap[reminder.product_id];
+        let effectiveDate = reminder.predicted_date;
+        let dateSource = 'ai';
+
+        if (expiry) {
+          const expiryStr = new Date(expiry).toISOString().slice(0, 10);
+          if (expiryStr < reminder.predicted_date) {
+            effectiveDate = expiryStr;
+            dateSource = 'expiry_date';
+          }
+        }
+
+        return { ...reminder, predicted_date: effectiveDate, date_source: dateSource };
+      });
+
       // Tạo thông báo cho các sản phẩm sắp cần mua lại (nếu chưa có)
-      for (const reminder of aiData.reminders) {
+      for (const reminder of reminders) {
         const exists = await Notification.findOne({
           where: {
             fk_user_id: userId,
@@ -140,7 +173,6 @@ export const getRepurchaseReminders = async (req, res, next) => {
             message: `Sản phẩm "${reminder.product_name}" của bạn sắp hết, dự kiến cần mua lại vào ${reminder.predicted_date}.`,
             ref_id: reminder.product_id,
           });
-          // Gửi email nhắc mua lại
           const user = await User.findByPk(userId, { attributes: ['email', 'full_name'] });
           if (user) {
             sendPromotion(
@@ -153,7 +185,7 @@ export const getRepurchaseReminders = async (req, res, next) => {
         }
       }
 
-      return success(res, aiData.reminders);
+      return success(res, reminders);
     } catch {
       return success(res, []);
     }
