@@ -220,10 +220,17 @@ export const chat = async (req, res) => {
 
     // Bước 1: Phân tích intent
     const intentData = await detectIntent(message);
-    console.log('[Chat] Intent:', JSON.stringify(intentData));
+    console.log('\n─────────────────────────────────────────');
+    console.log('[Chat] Câu hỏi    :', message);
+    console.log('[Chat] Intent      :', intentData.intent);
+    console.log('[Chat] Từ khóa     :', intentData.keywords?.join(', ') || '(none)');
+    console.log('[Chat] Limit       :', intentData.limit);
 
     // Bước 2: Retrieve context từ DB
     const { contextText, products } = await retrieveByIntent(intentData, userId);
+    console.log('[Chat] Sản phẩm tìm được:', products.length > 0 ? products.map(p => p.name).join(', ') : '(không có)');
+    console.log('[Chat] Context     :\n' + contextText);
+    console.log('─────────────────────────────────────────\n');
 
     // Bước 3: Gọi Groq với context thực
     const completion = await groq.chat.completions.create({
